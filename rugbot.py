@@ -14,13 +14,16 @@ since_id = 0
 res = api.search_tweets('@rugged_again', count=1)
 since_id = res[0].id
 
+with open('rugphrases.txt', 'r') as rugfile:
+    ruglines = rugfile.readlines()
+
 while True:
     res = api.search_tweets('@rugged_again', since_id=since_id)
     print([(s.id, s.text, s.user.screen_name) for s in res])
     if res != []:
         for status in res[::-1]:
             stext = status.text
-            api.update_status(f"@{status.user.screen_name} got RUGGED AGAIN!!", in_reply_to_status_id=status.id, auto_populate_reply_metadata=True)
+            api.update_status(ruglines[status.id % len(ruglines)], in_reply_to_status_id=status.id, auto_populate_reply_metadata=True)
         since_id = res[0].id
     time.sleep(10)
 
