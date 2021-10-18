@@ -1,5 +1,5 @@
-import time, os, dateutil.tz
-import tweepy
+import time, os, dateutil.tz, re
+import tweepy, requests
 from datetime import datetime
 import random
 
@@ -22,7 +22,12 @@ with open('rugphrases.txt', 'r') as rugfile:
 with open('gms.txt', 'r') as gmfile:
     gms = gmfile.readlines()
 
-api.update_status("RugBot has received an update from the central data processor... hopefully this doesn't cause any problems 👀")
+rex = r'.*href="/QuietImCoding/rugged_again/commit[^>]*>([^<]*).*'
+res = requests.get('https://github.com/QuietImCoding/rugged_again/commits/main')
+matches = re.findall(rex, res.text)
+
+api.update_status("RugBot has received an update from the central data processor... found the following text in subconcious memory: " +
+                  matches[0])
 
 while True:
     ctime = datetime.now(dateutil.tz.gettz("PST"))
