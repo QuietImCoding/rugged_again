@@ -1,6 +1,7 @@
-import time, os
+import time, os, dateutil.tz
 import tweepy
 from datetime import datetime
+import random
 
 consumer_key = os.environ['CONSUMER_KEY']
 consumer_secret = os.environ['CONSUMER_SECRET']
@@ -21,17 +22,24 @@ with open('rugphrases.txt', 'r') as rugfile:
 with open('gms.txt', 'r') as gmfile:
     gms = gmfile.readlines()
 
+api.update_status("RugBot has received an update from the central data processor... hopefully this doesn't cause any problems 👀")
+
 while True:
-    ctime = datetime.now()
-    if ctime.hour == 7 + (since_id % 4) and ctime.minute == since_id % 60 and ctime.second < 10:
+    ctime = datetime.now(dateutil.tz.gettz("PST"))
+    if ctime.hour == 7 + (since_id % 4) and ctime.minute == since_id % 60 and ctime.second < 6:
         api.update_status(gms[since_id % len(gms)])
     res = api.search_tweets('@rugged_again', since_id=since_id)
-    print([(s.id, s.text, s.user.screen_name) for s in res])
+    updated = [(s.id, s.text, s.user.screen_name) for s in res]
+    if updated != []:
+        print(f'Activity : {updated}')
     if res != []:
         for status in res[::-1]:
             if status.user.screen_name != 'rugged_again':
                 stext = status.text
-                api.update_status(ruglines[status.id % len(ruglines)], in_reply_to_status_id=status.id, auto_populate_reply_metadata=True)
+                try:
+                    api.update_status(ruglines[status.id % len(ruglines)], in_reply_to_status_id=status.id, auto_populate_reply_metadata=True)
+                except Exception as e:
+                    print(f'{e}, {status}')
         since_id = res[0].id
-    time.sleep(10)
+    time.sleep(random.randint(0, 5) + 5)
 
