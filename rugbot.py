@@ -47,8 +47,14 @@ except:
 while True:
     ctime = datetime.now(dateutil.tz.gettz("PST"))
     if ctime.hour == 7 + (since_id % 4) and ctime.minute == since_id % 60 and ctime.second < 3:
-        api.update_status(gms[since_id % len(gms)])
-    res = api.search_tweets('@rugged_again', since_id=since_id)
+        try:
+            api.update_status(gms[since_id % len(gms)])
+        except Exception as e::
+            print(f"Some bullshit happened saying gm: {e}")
+    try:
+        res = api.search_tweets('@rugged_again', since_id=since_id)
+    except Exception as e:
+        print(f"Some bullshit happened searching for tweets: {e}")
     updated = [(s.id, s.text, s.user.screen_name) for s in res]
     if updated != []:
         print(f'Activity : {updated}')
@@ -59,7 +65,7 @@ while True:
                 try:
                     api.update_status(ruglines[status.id % len(ruglines)], in_reply_to_status_id=status.id, auto_populate_reply_metadata=True)
                 except Exception as e:
-                    print(f'{e}, {status}')
+                    print(f'Some absolute garbage occurred responding to a message: {e} occurred with {status.id} by {status.user.screen_name}')
         since_id = res[0].id
     time.sleep(random.randint(0, 5) + 5)
 
