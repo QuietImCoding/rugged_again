@@ -49,7 +49,7 @@ while True:
     if ctime.hour == 7 + (since_id % 4) and ctime.minute == since_id % 60 and ctime.second < 3:
         try:
             api.update_status(gms[since_id % len(gms)])
-        except Exception as e::
+        except Exception as e:
             print(f"Some bullshit happened saying gm: {e}")
     try:
         res = api.search_tweets('@rugged_again', since_id=since_id)
