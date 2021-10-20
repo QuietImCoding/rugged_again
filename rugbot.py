@@ -8,13 +8,19 @@ consumer_secret = os.environ['CONSUMER_SECRET']
 access_key = os.environ['ACCESS_KEY']
 access_secret = os.environ['ACCESS_SECRET']
 
-auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-auth.set_access_token(access_key, access_secret)
-api = tweepy.API(auth)
+try:
+    auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+    auth.set_access_token(access_key, access_secret)
+    api = tweepy.API(auth)
+except:
+    print("Auth error :'(")
 
 since_id = 0
-res = api.search_tweets('@rugged_again', count=1)
-since_id = res[0].id
+try:
+    res = api.search_tweets('@rugged_again', count=1)
+    since_id = res[0].id
+except:
+    print('Unable to search... rate limit reached?')
 
 with open('rugphrases.txt', 'r') as rugfile:
     ruglines = rugfile.readlines()
@@ -22,16 +28,25 @@ with open('rugphrases.txt', 'r') as rugfile:
 with open('gms.txt', 'r') as gmfile:
     gms = gmfile.readlines()
 
-rex = r'.*href="/QuietImCoding/rugged_again/commit[^>]*>([^<]*).*'
-res = requests.get('https://github.com/QuietImCoding/rugged_again/commits/main')
-matches = re.findall(rex, res.text)
+with open('lastcommit.txt', 'r') as lcfile:
+    lastcommit = lcfile.read()
 
-api.update_status("RugBot has received an update from the central data processor... found the following text in subconcious memory: " +
-                  matches[0])
+try:
+    rex = r'.*href="/QuietImCoding/rugged_again/commit[^>]*>([^<]*).*'
+    res = requests.get('https://github.com/QuietImCoding/rugged_again/commits/main')
+    matches = re.findall(rex, res.text)
+    if matches[0] != lastcommit:
+        api.update_status("RugBot has received an update from the central data processor... found the following text in subconcious memory: " +
+                          matches[0])
+        lastcommit = matches[0]
+        with open('lastcommit.txt', 'w') as lcoutfile:
+            lcoutfile.write(lastcommit)
+except:
+    print("Error fetching / tweeting commit message...")
 
 while True:
     ctime = datetime.now(dateutil.tz.gettz("PST"))
-    if ctime.hour == 7 + (since_id % 4) and ctime.minute == since_id % 60 and ctime.second < 6:
+    if ctime.hour == 7 + (since_id % 4) and ctime.minute == since_id % 60 and ctime.second < 3:
         api.update_status(gms[since_id % len(gms)])
     res = api.search_tweets('@rugged_again', since_id=since_id)
     updated = [(s.id, s.text, s.user.screen_name) for s in res]
